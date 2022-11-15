@@ -1,0 +1,199 @@
+function CalendarToPDF()
+{
+  var content = ''
++'<html>'
++'<head>'
++'<style type="text/css">'
++'body {'
++'    font-family: Arial,sans-serif;'
++'    margin-top: 1em;'
++'    margin-bottom: 1em;'
++'    margin-left: 1em;'
++'    margin-right: 1em;'
++'}'
++'#calendarTitle {'
++'    font-size: 1.25em;'
++'    font-weight: bolder;'
++'    padding-left: 0.1em;'
++'}'
++'.date-top {'
++'    font-size: 1.0em;'
++'    margin-top: 0px;'
++'    margin-bottom: 0px;'
++'    margin-left: 0px;'
++'    margin-right: 0px;'
++'    margin-top: 1em;'
++'    padding-left: 1em;'
++'    padding-right: 1em;'
++'    page-break-inside: avoid;'
++'}'
++'.date-top span {'
++'    font-weight: bold;'
++'}'
++'.event-header {'
++'    font-weight: bold;'
++'    margin-top: 1em;'
++'    margin-bottom: 0.25em;'
++'    margin-left: 0px;'
++'    margin-right: 0px;'
++'}'
++'.event-date {'
++'}'
++'.event-title {'
++'	  padding-left: 1em;'
++'}'
++'.event {'
++'    font-size: 0.9em;'
++'    margin-top: 0px;'
++'    margin-bottom: 0px;'
++'    margin-left: 0px;'
++'    margin-right: 0px;'
++'    padding-top: 0em;'
++'    padding-left: 5em;'
++'    padding-right: 1em;'
++'    padding-bottom: 0em;'
++'    page-break-inside: avoid;'
++'}'
++'.event-detail {'
++'    margin-top: 0px;'
++'    margin-bottom: 0px;'
++'    margin-left: 2em;'
++'    margin-right: 0px;'
++'  	border-left: 1px solid #ccc;'
++'  	padding-left: 1em;'
++'    font-size: 0.9em;'
++'}'
++'.event-detail p {'
++'    margin-top: 0px;'
++'    margin-bottom: 0px;'
++'    margin-left: 0px;'
++'    margin-right: 0px;'
++'    padding-top: 0.25em;'
++'    padding-bottom: 0.25em;'
++'    overflow: wrap;'
++'}'
++'</style>'
++'</head>'
++'<body>'
++'<p id="calendarTitle">Calendar for '+CalendarApp.getDefaultCalendar().getName()+'</p>';
+
+  var today = new Date(Utilities.formatDate(new Date(), 'Europe/London', 'MMMM dd, yyyy 00:00:00 Z'));
+  var monday = getMonday(today);
+
+  content += getWeek(monday);
+  content += getWeek(new Date(monday.getTime()+(7*(24*3600*1000))));
+
+  content += ''
+ +'</body>'
+ +'</html>';
+
+  //console.log(content);
+
+  var blob = Utilities.newBlob(content, MimeType.HTML, 'Calendar.pdf');
+  var pdf = blob.getAs("application/pdf");
+  
+  var folder = DriveApp.getFolderById(getFolder());
+  var existing_files = folder.getFilesByName('Calendar.pdf');
+  if (existing_files.hasNext()) {
+    while (existing_files.hasNext()) {
+      var existing_file = existing_files.next();
+      //existing_file.setContent(pdf.getDataAsString());
+      Drive.Files.update(
+        {
+          title: existing_file.getName(),
+          mimeType: existing_file.getMimeType()
+        },
+        existing_file.getId(),
+        pdf
+      );
+    }
+  } else {
+    var new_file = folder.createFile(pdf);
+    drive_id = new_file.getId();
+  }
+}
+function getWeek(monday)
+{
+  var content = '';
+  for (x = 0; x < 5; x++) {
+    var this_day = new Date(monday.getTime()+(x*(24*3600*1000)));
+    content += '<div class="date-top"><span>'+Utilities.formatDate(this_day,'Europe/London', 'E dd MMM yyyy')+'</span>';
+    events = CalendarApp.getDefaultCalendar().getEventsForDay(this_day);
+
+    for (e = 0; e < events.length; e++) {
+      content += getEvent(events[e]);
+    }
+    content += '</div>';
+  }
+
+  return content;
+}
+
+function getEvent(event)
+{
+  var content = '';
+
+  var owner = false;
+  if (event.getMyStatus() == CalendarApp.GuestStatus.NO) {
+      var status = 'No';
+  } else if (event.getMyStatus() == CalendarApp.GuestStatus.YES) {
+      var status = 'Yes';
+  } else if (event.getMyStatus() == CalendarApp.GuestStatus.MAYBE) {
+      var status = 'Maybe';
+  } else if (event.getMyStatus() == CalendarApp.GuestStatus.INVITED) {
+      var status = 'Invited';
+  } else if (event.getMyStatus() == CalendarApp.GuestStatus.OWNER) {
+      var status = 'Yes';
+      var owner = true;
+  }
+  if (status != 'No') {
+    content += '<div class="event">';
+    var time = Utilities.formatDate(event.getStartTime(),'Europe/London', 'HH:mm')+' - '+Utilities.formatDate(event.getEndTime(),'Europe/London', 'HH:mm');
+    var title = event.getTitle();
+    var organizer = event.getOriginalCalendarId();
+    var location = event.getLocation();
+    var description = event.getDescription().replace(/\s/,' ').replace('&nbsp;',' ');
+    var hangout_link = '';
+
+    var full_event = Calendar.Events.get("primary", event.getId().split("@")[0]);
+    if (full_event != null) {
+      var hangout_link = full_event.hangoutLink;
+    }
+
+    content += '<p class="event-header"><span class="event-date">'+time+'</span><span class="event-title">'+title+'</span></p>';
+    content += '<div class="event-detail">';
+    if (!owner) {
+      content += '<p><strong>Organizer:</strong> '+organizer+'</p>';
+    }
+    if (location != '') {
+      content += '<p><strong>Location:</strong> '+location+'</p>';
+    }
+    if (typeof hangout_link != 'undefined') {
+      content += '<p><strong>Meet:</strong> <a href="'+hangout_link+'">'+hangout_link+'</a></p>';
+    }
+    content += '<p><strong>Going?</strong> '+status+'</p>';
+    if (description != '') {
+      content += '<p><strong>Description:</strong> '+description+'</p>';
+    }
+    content += '</div>';
+    content += '</div>';
+  }
+
+  return content;
+}
+
+function getMonday(date){
+  var d = Number(Utilities.formatDate(new Date(date), 'Europe/London', "u"));
+  if(d == 1) {
+    return date;
+  } else {
+    // subtract by d-1 days
+    return new Date(date.getTime()-(d-1)*(24*3600*1000));
+  }
+}
+
+function getFolder()
+{
+  //Change this folder to a new folder you create just for this one PDF
+  return '---YOUR-GOOGLE-DRIVE-FOLDER-ID---';
+}
