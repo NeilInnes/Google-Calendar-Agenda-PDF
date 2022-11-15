@@ -155,9 +155,18 @@ function getEvent(event)
     var description = event.getDescription().replace(/\s/,' ').replace('&nbsp;',' ');
     var hangout_link = '';
 
-    var full_event = Calendar.Events.get("primary", event.getId().split("@")[0]);
-    if (full_event != null) {
-      var hangout_link = full_event.hangoutLink;
+    if (event.getId().match(/@/)) {
+      var event_id = event.getId().split("@")[0]
+    } else {
+      var event_id = event.getId();
+    }
+    try {
+      var full_event = Calendar.Events.get("primary", event_id);
+      if (full_event != null) {
+        var hangout_link = full_event.hangoutLink;
+      }
+    } catch(err) {
+      //skip event that doesn't belong to this user
     }
 
     content += '<p class="event-header"><span class="event-date">'+time+'</span><span class="event-title">'+title+'</span></p>';
