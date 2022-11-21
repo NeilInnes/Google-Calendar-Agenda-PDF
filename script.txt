@@ -3,7 +3,7 @@ const start_on_monday = false;
 //Change this to the number of days you wish to display on your schedule
 const number_of_days = 7;
 //Change this folder to a new folder you create just for this one PDF
-const folder = '--ENTER-THE-ID-OF-YOUR-FOLDER-HERE---';
+const folder = '---YOUR-GOOGLE-DRIVE-FOLDER-ID---';
 //Change this to change the name of the generated file
 const filename = 'Calendar.pdf'
 //Do not change this
