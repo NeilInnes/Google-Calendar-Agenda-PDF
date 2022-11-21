@@ -42,7 +42,7 @@ function getEvents()
 
   for (x = 0; x < number_of_days; x++) {
     var this_day = new Date(this.start_day.getTime()+(x*(24*3600*1000)));
-    this.events[this_day.getTime().toFixed()] = CalendarApp.getDefaultCalendar().getEventsForDay(this_day);
+    this.events[this_day.getTime()] = CalendarApp.getDefaultCalendar().getEventsForDay(this_day);
   }
 
   return true;
