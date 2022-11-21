@@ -6,7 +6,7 @@
 2. Edit the name of the Project, call it 'Calendar Agenda PDF':
 <img src="https://user-images.githubusercontent.com/4203000/201926884-846bdf11-cedf-45bf-8032-e8288996aaae.png" width="400">
 
-3. Paste in the code from the `script.txt` file in this repository
+3. Paste in the code from the `Code.gs` file into the `Code.gs` file in your project
 
 4. Create a new folder called `Calendar Agenda` in https://drive.google.com/ 
 
@@ -24,3 +24,5 @@
 
 10. Schedule it to run automatically - click the clock icon to go to `Triggers` and add a new trigger as follows:
 <img src="https://user-images.githubusercontent.com/4203000/201926073-67bb20fd-0e4c-4998-9dbc-31f0f8912e7c.png" width="400">
+
+11. If your calendar isn't updating, try running the `reset` function.
