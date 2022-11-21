@@ -16,7 +16,7 @@ function CalendarToPDF()
   this.userProps = PropertiesService.getUserProperties();
   last_updated_raw = this.userProps.getProperty(last_updated_key);
   if (last_updated_raw != null) {
-    this.last_updated = last_updated_raw;
+    this.last_updated = new Date().setTime(last_updated_raw);
   }
   console.log('Last Updated: '+this.last_updated);
 
@@ -42,7 +42,7 @@ function getEvents()
 
   for (x = 0; x < number_of_days; x++) {
     var this_day = new Date(this.start_day.getTime()+(x*(24*3600*1000)));
-    this.events[this_day.getTime()] = CalendarApp.getDefaultCalendar().getEventsForDay(this_day);
+    this.events[Utilities.formatDate(this_day,'Europe/London', 'E dd MMM yyyy')] = CalendarApp.getDefaultCalendar().getEventsForDay(this_day);
   }
 
   return true;
@@ -68,7 +68,7 @@ function getScheduleContent()
 {
   var content = getHeader();
   for (var this_day in this.events) {
-    content += '<div class="date-top"><span>'+Utilities.formatDate(new Date(this_day),'Europe/London', 'E dd MMM yyyy')+'</span>';
+    content += '<div class="date-top"><span>'+this_day+'</span>';
 
     for (e = 0; e < this.events[this_day].length; e++) {
       content += getEventContent(this.events[this_day][e]);
@@ -278,4 +278,10 @@ const dictPop = (obj, key, def) => {
   } else {
     throw `key ${key} not in dictionary`
   }
+}
+
+function reset()
+{
+  this.userProps = PropertiesService.getUserProperties();
+  last_updated_raw = this.userProps.deleteProperty(last_updated_key);
 }
